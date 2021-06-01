@@ -9,11 +9,12 @@
 #include <string.h>
 #include <getopt.h>
 #include <math.h>
+#include <sys/types.h>
 
 #include "xdrfile_xtc.h"
 
-#define OPTSTR "vi:o:f:h"
-#define USAGE_FMT  "%s [-v] [-f hexflag] [-i inputfile] [-o outputfile] [-h]\n"
+#define OPTSTR "f:z:n:h"
+#define USAGE_FMT  "%s [-f trajectory] [-z delta_z] [-n number of frames] [-h]\n"
 #define ERR_FOPEN_INPUT  "fopen(input, r)"
 #define ERR_FOPEN_OUTPUT "fopen(output, w)"
 #define ERR_DO_THE_NEEDFUL "do_the_needful blew up"
@@ -24,10 +25,11 @@ extern char *optarg;
 extern int opterr, optind;
 
 typedef struct {
-  int           verbose;
-  uint32_t      flags;
-  FILE         *input;
-  FILE         *output;
+  // FILE         *input;
+  float         delta_z;
+  uint64_t      nframes;
+  char          fname[300];
+  int           batch;
 } options_t;
 
 int dumb_global_variable = -11;
@@ -37,38 +39,35 @@ int  do_the_needful(options_t *options);
 
 int main(int argc, char *argv[]) {
     int opt;
-    options_t options = { 0, 0x0, stdin, stdout };
+    options_t options = { 0, 0, "" , 0};
+
+    int natoms, nmol;
+    int mol;
+    int molbatch = 0;
 
     opterr = 0;
 
-    printf("%f\n", M_PI);
-    fflush(stdout);
-
     while ((opt = getopt(argc, argv, OPTSTR)) != EOF)
        switch(opt) {
-           case 'i':
-              if (!(options.input = fopen(optarg, "r")) ){
-                 perror(ERR_FOPEN_INPUT);
-                 exit(EXIT_FAILURE);
-                 /* NOTREACHED */
-              }
-              break;
-
-           case 'o':
-              if (!(options.output = fopen(optarg, "w")) ){
-                 perror(ERR_FOPEN_OUTPUT);
-                 exit(EXIT_FAILURE);
-                 /* NOTREACHED */
-              }
-              break;
-
            case 'f':
-              options.flags = (uint32_t )strtoul(optarg, NULL, 16);
+              sscanf(optarg, "%s", options.fname);
+              // if (!(options.input = fopen(optarg, "r")) ){
+              //    perror(ERR_FOPEN_INPUT);
+              //    exit(EXIT_FAILURE);
+              //    /* NOTREACHED */
+              // }
               break;
 
-           case 'v':
-              options.verbose += 1;
+           case 'z':
+              options.delta_z = strtof(optarg, NULL);
               break;
+
+           case 'n':
+              options.nframes = (uint64_t) strtoul(optarg, NULL, 10);
+              break;
+
+           case 'b':
+              options.batch += 1;
 
            case 'h':
            default:
@@ -81,6 +80,22 @@ int main(int argc, char *argv[]) {
        perror(ERR_DO_THE_NEEDFUL);
        exit(EXIT_FAILURE);
        /* NOTREACHED */
+    }
+
+    printf("-------- optarg debug --------\n");
+    printf("delta_z = %f\n", options.delta_z);
+    printf("nframes = %llu\n", options.nframes);
+    printf("fname   = %s\n", options.fname);
+    printf("-------- gubed gratpo --------\n\n");
+
+    read_xtc_natoms(options.fname, &natoms);
+    nmol = natoms / 3;
+
+    printf("# %d atoms corresponding to %d molecules\n", natoms, nmol);
+
+    for (mol = 0; mol + molbatch <= nmol; mol+=molbatch) {
+      printf("# Reading positions of molecules %d-%d\n", mol, mol+molbatch-1);
+      fflush(stdout);
     }
 
     return EXIT_SUCCESS;
@@ -99,10 +114,10 @@ int do_the_needful(options_t *options) {
      return EXIT_FAILURE;
    }
 
-   if (!options->input || !options->output) {
-     errno = ENOENT;
-     return EXIT_FAILURE;
-   }
+   // if (!options->input || !options->output) {
+   //   errno = ENOENT;
+   //   return EXIT_FAILURE;
+   // }
 
    /* XXX do needful stuff */
 
