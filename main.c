@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <libgen.h>
-#include <errno.h>
 #include <string.h>
 #include <getopt.h>
 #include <math.h>
@@ -13,28 +12,13 @@
 
 #include "xdrfile_xtc.h"
 #include "xtc_seek.h"
-
-#define OPTSTR "f:z:n:s:bh"
-#define USAGE_FMT  "%s [-f trajectory] [-z delta_z] [-n number of frames] [-s stride] [-b] [-h]\n"
-#define ERR_FOPEN_INPUT  "fopen(input, r)"
-#define ERR_FOPEN_OUTPUT "fopen(output, w)"
-#define ERR_NOFNAME "-f is mandatory!\n"
-#define ERR_DO_THE_NEEDFUL "do_the_needful blew up"
-#define DEFAULT_PROGNAME "locmsd"
+#include "tools.h"
+#include "analyze.h"
 
 extern int errno;
 extern char *optarg;
 extern int opterr, optind;
 
-typedef struct {
-  float         delta_z;
-  uint64_t      max_frames;
-  char          fname[300];
-  int           stride;
-} options_t;
-
-void usage(char *progname, int opt);
-int  do_the_needful(options_t *options);
 
 int main(int argc, char *argv[]) {
     int opt;
@@ -56,6 +40,8 @@ int main(int argc, char *argv[]) {
 
     int i_frame = 0;
     int t_frame;
+    rvec *curr;
+    rvec *prev;
 
     opterr = 0;
 
@@ -136,6 +122,9 @@ int main(int argc, char *argv[]) {
     printf("prec   = %f\n", prec);
     printf("-------- gubed rdx --------\n\n");
 
+    curr = calloc(natoms, sizeof(curr[0]));
+    prev = calloc(natoms, sizeof(prev[0]));
+
     do {
       if (i_frame == 1)
         t_frame = time;
@@ -147,33 +136,23 @@ int main(int argc, char *argv[]) {
         printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
         fflush(stdout);
 
-        printf("%f\n", x[0][2]);
+        if (i_frame == 0) {
+          memcpy(curr, x, natoms*DIM);
+          // printf("\nx[1] = [ %f %f %f ]\n", x[1][0], x[1][1], x[1][2]);
+          // printf("curr[1] = [ %f %f %f ]\n", curr[1][0], curr[1][1], curr[1][2]);
+        }
+        else if (i_frame > 0) {
+          memcpy(prev, curr, natoms*DIM);
+          memcpy(curr, x, natoms*DIM);
+          // printf("\nx[1] = [ %f %f %f ]\n", x[1][0], x[1][1], x[1][2]);
+          // printf("curr[1] = [ %f %f %f ]\n", curr[1][0], curr[1][1], curr[1][2]);
+          // printf("prev[1] = [ %f %f %f ]\n", prev[1][0], prev[1][1], prev[1][2]);
+        }
+        get_msd(curr, prev);
+
       }
       i_frame++;
     } while(!read_xtc(xd, natoms, &step, &time, box, x, &prec));
 
     return EXIT_SUCCESS;
-}
-
-void usage(char *progname, int opt) {
-   fprintf(stderr, USAGE_FMT, progname?progname:DEFAULT_PROGNAME);
-   exit(EXIT_FAILURE);
-   /* NOTREACHED */
-}
-
-int do_the_needful(options_t *options) {
-
-   if (!options) {
-     errno = EINVAL;
-     return EXIT_FAILURE;
-   }
-
-   // if (!options->input || !options->output) {
-   //   errno = ENOENT;
-   //   return EXIT_FAILURE;
-   // }
-
-   /* XXX do needful stuff */
-
-   return EXIT_SUCCESS;
 }
