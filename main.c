@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
           // printf("curr[1] = [ %f %f %f ]\n", curr[1][0], curr[1][1], curr[1][2]);
           // printf("prev[1] = [ %f %f %f ]\n", prev[1][0], prev[1][1], prev[1][2]);
         }
-        get_msd(curr, prev);
+        get_msd(curr, prev, box[0][0]);
 
       }
       i_frame++;

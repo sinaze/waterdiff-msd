@@ -1,5 +1,5 @@
 #define OPTSTR "f:z:n:s:h"
-#define USAGE_FMT  "%s [-f trajectory] [-z delta_z] [-n number of frames] [-s stride] [-h]\n"
+#define USAGE_FMT  "%s -f trajectory [-z delta_z] [-n number of frames] [-s stride] [-h]\n"
 #define ERR_FOPEN_INPUT  "fopen(input, r)"
 #define ERR_FOPEN_OUTPUT "fopen(output, w)"
 #define ERR_NOFNAME "-f is mandatory!\n"
@@ -14,4 +14,5 @@ typedef struct {
 } options_t;
 
 void usage(char *progname, int opt);
+
 int  do_the_needful(options_t *options);

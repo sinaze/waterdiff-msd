@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+
 #include "tools.h"
 
 void usage(char *progname, int opt) {
