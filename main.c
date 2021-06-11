@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     rvec *alpha_msd_tau;
     rvec *phi_msd_tau;
 
-    int i;
+    int i, i_mol;
 
     opterr = 0;
 
@@ -162,23 +162,20 @@ int main(int argc, char *argv[]) {
       if (i_frame % options.stride == 0) {
         printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
         fflush(stdout);
-
         if (i_frame == 0) {
           memcpy(curr, x, natoms*DIM);
-          print_rvec(r_msd_tau[i_frame], "\tr_msd_tau");
-          print_rvec(alpha_msd_tau[i_frame], "\nalpha_msd_tau");
-          print_rvec(phi_msd_tau[i_frame], "\nphi_msd_tau");
         }
         else if (i_frame > 0) {
           memcpy(prev, curr, natoms*DIM);
           memcpy(curr, x, natoms*DIM);
-          get_msd(curr, prev, box[0][0], delta_r, delta_alpha, delta_phi);
-          rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
-          rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
-          rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
+          for (i_mol = 0; i_mol < nmol; i_mol++) {
+            get_msd(0, curr, prev, box[0][0], options.delta_z,
+                    delta_r, delta_alpha, delta_phi);
+            rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
+            rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
+            rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
+          }
           print_rvec(r_msd_tau[i_frame], "\nr_msd_tau");
-          print_rvec(alpha_msd_tau[i_frame], "alpha_msd_tau");
-          print_rvec(phi_msd_tau[i_frame], "phi_msd_tau");
         }
       }
       i_frame++;

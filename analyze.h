@@ -1,6 +1,7 @@
 #define INC 1
 
-void get_msd(const rvec *curr, const rvec *prev, const float l,
+void get_msd(const int mol, const rvec *curr, const rvec *prev,
+             const float l, const float delta_z,
              rvec delta_r, rvec delta_alpha, rvec delta_phi);
 
 void rxcrossyz(const rvec x, const rvec y, rvec z);
