@@ -6,28 +6,29 @@
 #include "analyze.h"
 #include "cblas.h"
 
-int get_msd(const rvec *curr, const rvec *prev, const float l) {
+void get_msd(const rvec *curr, const rvec *prev, const float l,
+             rvec delta_r, rvec delta_alpha, rvec delta_phi) {
   rvec x, y, z;
   rvec x_prev, y_prev, z_prev;
-  rvec delta_r;
-  rvec delta_alpha;
-  rvec delta_phi;
 
   get_eckart(curr[0], curr[1], curr[2], l, x, y, z);
   get_eckart(prev[0], prev[1], prev[2], l, x_prev, y_prev, z_prev);
   get_delta(curr[0], prev[0], 0.0, x, y, z, x_prev, y_prev, z_prev, l,
             delta_r, delta_alpha, delta_phi);
-  print_rvec(delta_r, "\ndelta_r");
-  print_rvec(delta_alpha, "delta_alpha");
-  print_rvec(delta_phi, "delta_phi");
-
-  return EXIT_SUCCESS;
 }
 
 void rxcrossyz(const rvec x, const rvec y, rvec z) {
   z[0] = x[1] * y[2] - x[2] * y[1];
   z[1] = x[2] * y[0] - x[0] * y[2];
   z[2] = x[0] * y[1] - x[1] * y[0];
+}
+
+void rxpyz(const rvec x, const rvec y, rvec z) {
+  int i;
+
+  for (i = 0; i < DIM; i++) {
+      z[i] = x[i] + y[i];
+  }
 }
 
 void print_rvec(const rvec x, const char *name) {

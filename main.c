@@ -38,10 +38,22 @@ int main(int argc, char *argv[]) {
     int est_nframes;
     int64_t **offsets;
 
+    int nframes;
+
     int i_frame = 0;
     int t_frame;
     rvec *curr;
     rvec *prev;
+
+    rvec delta_r;
+    rvec delta_alpha;
+    rvec delta_phi;
+
+    rvec *r_msd_tau;
+    rvec *alpha_msd_tau;
+    rvec *phi_msd_tau;
+
+    int i;
 
     opterr = 0;
 
@@ -57,6 +69,7 @@ int main(int argc, char *argv[]) {
 
            case 'n':
               options.max_frames = (uint64_t) strtoul(optarg, NULL, 10);
+              n_frames = options.max_frames;
               break;
 
            case 's':
@@ -92,7 +105,7 @@ int main(int argc, char *argv[]) {
     read_xtc_natoms(options.fname, &natoms);
     nmol = natoms / 3;
 
-    read_xtc_n_frames(options.fname, &n_frames, &est_nframes, offsets);
+    // read_xtc_n_frames(options.fname, &n_frames, &est_nframes, offsets);
 
     printf("# %d atoms corresponding to %d molecules\n", natoms, nmol);
 
@@ -125,6 +138,20 @@ int main(int argc, char *argv[]) {
     curr = calloc(natoms, sizeof(curr[0]));
     prev = calloc(natoms, sizeof(prev[0]));
 
+    nframes = (options.max_frames < n_frames) ? options.max_frames : n_frames;
+    r_msd_tau = calloc(nframes, sizeof(r_msd_tau[0]));
+    for (i = 0; i < DIM; i++) {
+      r_msd_tau[0][i] = 0;
+    }
+    alpha_msd_tau = calloc(nframes, sizeof(alpha_msd_tau[0]));
+    for (i = 0; i < DIM; i++) {
+      alpha_msd_tau[0][i] = 0;
+    }
+    phi_msd_tau = calloc(nframes, sizeof(phi_msd_tau[0]));
+    for (i = 0; i < DIM; i++) {
+      phi_msd_tau[0][i] = 0;
+    }
+
     do {
       if (i_frame == 1)
         t_frame = time;
@@ -138,21 +165,32 @@ int main(int argc, char *argv[]) {
 
         if (i_frame == 0) {
           memcpy(curr, x, natoms*DIM);
-          // printf("\nx[1] = [ %f %f %f ]\n", x[1][0], x[1][1], x[1][2]);
-          // printf("curr[1] = [ %f %f %f ]\n", curr[1][0], curr[1][1], curr[1][2]);
+          print_rvec(r_msd_tau[i_frame], "\tr_msd_tau");
+          print_rvec(alpha_msd_tau[i_frame], "\nalpha_msd_tau");
+          print_rvec(phi_msd_tau[i_frame], "\nphi_msd_tau");
         }
         else if (i_frame > 0) {
           memcpy(prev, curr, natoms*DIM);
           memcpy(curr, x, natoms*DIM);
-          // printf("\nx[1] = [ %f %f %f ]\n", x[1][0], x[1][1], x[1][2]);
-          // printf("curr[1] = [ %f %f %f ]\n", curr[1][0], curr[1][1], curr[1][2]);
-          // printf("prev[1] = [ %f %f %f ]\n", prev[1][0], prev[1][1], prev[1][2]);
+          get_msd(curr, prev, box[0][0], delta_r, delta_alpha, delta_phi);
+          rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
+          rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
+          rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
+          print_rvec(r_msd_tau[i_frame], "\nr_msd_tau");
+          print_rvec(alpha_msd_tau[i_frame], "alpha_msd_tau");
+          print_rvec(phi_msd_tau[i_frame], "phi_msd_tau");
         }
-        get_msd(curr, prev, box[0][0]);
-
       }
       i_frame++;
     } while(!read_xtc(xd, natoms, &step, &time, box, x, &prec));
+
+    free(x);
+    free(curr);
+    free(prev);
+
+    free(r_msd_tau);
+    free(alpha_msd_tau);
+    free(phi_msd_tau);
 
     return EXIT_SUCCESS;
 }
