@@ -163,19 +163,18 @@ int main(int argc, char *argv[]) {
         printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
         fflush(stdout);
         if (i_frame == 0) {
-          memcpy(curr, x, natoms*DIM);
+          memcpy(curr, x, natoms*sizeof(x[0]));
         }
         else if (i_frame > 0) {
-          memcpy(prev, curr, natoms*DIM);
-          memcpy(curr, x, natoms*DIM);
-          for (i_mol = 0; i_mol < nmol; i_mol++) {
-            get_msd(0, curr, prev, box[0][0], options.delta_z,
+          memcpy(prev, curr, natoms*sizeof(x[0]));
+          memcpy(curr, x, natoms*sizeof(x[0]));
+          for (i_mol = 0; i_mol < 500; i_mol++) {
+            get_msd(345, curr, prev, box[0][0], options.delta_z,
                     delta_r, delta_alpha, delta_phi);
             rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
             rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
             rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
           }
-          print_rvec(r_msd_tau[i_frame], "\nr_msd_tau");
         }
       }
       i_frame++;
@@ -184,6 +183,8 @@ int main(int argc, char *argv[]) {
     free(x);
     free(curr);
     free(prev);
+
+    print_rvec(r_msd_tau[100], "\nr_msd_tau");
 
     free(r_msd_tau);
     free(alpha_msd_tau);
