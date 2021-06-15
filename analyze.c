@@ -6,6 +6,30 @@
 #include "analyze.h"
 #include "cblas.h"
 
+void tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
+              const rvec *phi_msd_tau, const int nframes,
+              long int *n_tau, float *r_msd, rvec *alpha_msd,
+              rvec *phi_msd) {
+  int tau, i, j;
+  rvec delta_msd;
+
+  for (tau = 0; tau < nframes; tau++) {
+    n_tau[tau] += nframes - tau;
+    for (i = 0; i < nframes - tau; i++) {
+      rxmyz(r_msd_tau[i+tau], r_msd_tau[i], delta_msd);
+      r_msd[tau] += cblas_sdot(DIM, delta_msd, INC, delta_msd, INC);
+      rxmyz(alpha_msd_tau[i+tau], alpha_msd_tau[i], delta_msd);
+      for (j = 0; j < DIM; j++) {
+        alpha_msd[tau][j] += pow(delta_msd[j], 2);
+      }
+      rxmyz(phi_msd_tau[i+tau], phi_msd_tau[i], delta_msd);
+      for (j = 0; j < DIM; j++) {
+        phi_msd[tau][j] += pow(delta_msd[j], 2);
+      }
+    }
+  }
+}
+
 void get_msd(const int mol, const rvec *curr, const rvec *prev,
              const float l, const float delta_z,
              rvec delta_r, rvec delta_alpha, rvec delta_phi) {
@@ -32,6 +56,14 @@ void rxpyz(const rvec x, const rvec y, rvec z) {
 
   for (i = 0; i < DIM; i++) {
       z[i] = x[i] + y[i];
+  }
+}
+
+void rxmyz(const rvec x, const rvec y, rvec z) {
+  int i;
+
+  for (i = 0; i < DIM; i++) {
+      z[i] = x[i] - y[i];
   }
 }
 

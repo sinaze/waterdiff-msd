@@ -8,6 +8,8 @@ void rxcrossyz(const rvec x, const rvec y, rvec z);
 
 void rxpyz(const rvec x, const rvec y, rvec z);
 
+void rxmyz(const rvec x, const rvec y, rvec z);
+
 void print_rvec(const rvec x, const char *name);
 
 void get_eckart(const rvec o, const rvec h1, const rvec h2, const float l,
@@ -20,3 +22,8 @@ void get_delta(const rvec ow, const rvec ow_prev, const float delta_z,
                const rvec x_prev, const rvec y_prev, const rvec z_prev,
                const float l,
                rvec delta_r, rvec delta_alpha, rvec delta_phi);
+
+void tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
+              const rvec *phi_msd_tau, const int nframes,
+              long int *n_tau, float *r_msd, rvec *alpha_msd,
+              rvec *phi_msd);

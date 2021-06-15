@@ -53,6 +53,11 @@ int main(int argc, char *argv[]) {
     rvec *alpha_msd_tau;
     rvec *phi_msd_tau;
 
+    long int *n_tau;
+    float *r_msd;
+    rvec *alpha_msd;
+    rvec *phi_msd;
+
     int i, i_mol;
 
     opterr = 0;
@@ -109,11 +114,6 @@ int main(int argc, char *argv[]) {
 
     printf("# %d atoms corresponding to %d molecules\n", natoms, nmol);
 
-    // for (mol = 0; mol+molbatch <= nmol; mol+=molbatch) {
-    //   printf("# Reading positions of molecules %d-%d\n", mol, mol+molbatch-1);
-    //   fflush(stdout);
-    // }
-
     if (!(xd = xdrfile_open(options.fname, "r"))) {
       perror(ERR_FOPEN_INPUT);
       exit(EXIT_FAILURE);
@@ -168,8 +168,8 @@ int main(int argc, char *argv[]) {
         else if (i_frame > 0) {
           memcpy(prev, curr, natoms*sizeof(x[0]));
           memcpy(curr, x, natoms*sizeof(x[0]));
-          for (i_mol = 0; i_mol < 500; i_mol++) {
-            get_msd(345, curr, prev, box[0][0], options.delta_z,
+          for (i_mol = 0; i_mol < nmol; i_mol++) {
+            get_msd(i_mol, curr, prev, box[0][0], options.delta_z,
                     delta_r, delta_alpha, delta_phi);
             rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
             rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
@@ -184,11 +184,22 @@ int main(int argc, char *argv[]) {
     free(curr);
     free(prev);
 
-    print_rvec(r_msd_tau[100], "\nr_msd_tau");
-
+    printf("\nTau averaging...\n");
+    fflush(stdout);
+    n_tau = calloc(nframes, sizeof(long int));
+    r_msd = calloc(nframes, sizeof(float));
+    alpha_msd = calloc(nframes, sizeof(alpha_msd[0]));
+    phi_msd = calloc(nframes, sizeof(phi_msd[0]));
+    tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
+             n_tau, r_msd, alpha_msd, phi_msd);
     free(r_msd_tau);
     free(alpha_msd_tau);
     free(phi_msd_tau);
+
+    free(n_tau);
+    free(r_msd);
+    free(alpha_msd);
+    free(phi_msd);
 
     return EXIT_SUCCESS;
 }
