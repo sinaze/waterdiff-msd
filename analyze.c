@@ -59,6 +59,22 @@ void rxpyz(const rvec x, const rvec y, rvec z) {
   }
 }
 
+void rxppyz(const rvec x, const rvec y, rvec z) {
+  int i;
+
+  for (i = 0; i < DIM; i++) {
+      z[i] += x[i] + y[i];
+  }
+}
+
+void rxppy(const rvec x, rvec y) {
+  int i;
+
+  for (i = 0; i < DIM; i++) {
+      y[i] += x[i];
+  }
+}
+
 void rxmyz(const rvec x, const rvec y, rvec z) {
   int i;
 

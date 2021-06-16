@@ -10,6 +10,10 @@ void rxpyz(const rvec x, const rvec y, rvec z);
 
 void rxmyz(const rvec x, const rvec y, rvec z);
 
+void rxppyz(const rvec x, const rvec y, rvec z);
+
+void rxppy(const rvec x, rvec y);
+
 void print_rvec(const rvec x, const char *name);
 
 void get_eckart(const rvec o, const rvec h1, const rvec h2, const float l,
