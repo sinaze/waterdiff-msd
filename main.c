@@ -49,7 +49,6 @@ int main(int argc, char *argv[]) {
     rvec delta_r = { 0, 0, 0 };
     rvec delta_alpha = { 0, 0, 0 };
     rvec delta_phi = { 0, 0, 0 };
-    rvec delta_r_new;
 
     rvec *r_msd_tau;
     rvec *alpha_msd_tau;
@@ -62,7 +61,9 @@ int main(int argc, char *argv[]) {
 
     FILE *fp;
 
-    int i, i_mol;
+    int i, i_mol, j;
+
+    float *r_msd_tot;
 
     opterr = 0;
 
@@ -147,59 +148,65 @@ int main(int argc, char *argv[]) {
     alpha_msd_tau = calloc(nframes, sizeof(alpha_msd_tau[0]));
     phi_msd_tau = calloc(nframes, sizeof(phi_msd_tau[0]));
 
-    do {
-      if (i_frame == 1)
-        delta_t = time;
-      if (options.max_frames > 0 && i_frame >= options.max_frames) {
-        printf("\nMaximum number of frames reached.\n");
-        break;
-      }
-      if (i_frame % options.stride == 0) {
-        printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
-        fflush(stdout);
-        if (i_frame == 0) {
-          memcpy(curr, x, natoms*sizeof(x[0]));
-          for (i = 0; i < DIM; i++) {
-            r_msd_tau[i_frame][i] = 0.0;
-            alpha_msd_tau[i_frame][i] = 0.0;
-            phi_msd_tau[i_frame][i] = 0.0;
-          }
-        }
-        else if (i_frame > 0) {
-          memcpy(prev, curr, natoms*sizeof(x[0]));
-          memcpy(curr, x, natoms*sizeof(x[0]));
-          for (i_mol = 0; i_mol < nmol; i_mol++) {
-            get_msd(i_mol, curr, prev, box[0][0], options.delta_z,
-                    delta_r_new, delta_alpha, delta_phi);
-            rxppy(delta_r_new, delta_r);
-          }
-          // print_rvec(delta_r, "\ndelta_r");
-          cblas_sscal(DIM, 1.0/nmol, delta_r, INC);
-          // print_rvec(delta_r, "\ndelta_r");
-          rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
-          rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
-          rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
-          for (i = 0; i < DIM; i++) {
-            delta_r[i] = 0;
-          }
-        }
-      }
-      i_frame++;
-    } while(!read_xtc(xd, natoms, &step, &time, box, x, &prec));
-    print_rvec(r_msd_tau[100], "r_msd_tau[100]");
-
-    free(x);
-    free(curr);
-    free(prev);
-
-    printf("\nTau averaging...\n");
-    fflush(stdout);
     n_tau = calloc(nframes, sizeof(long int));
     r_msd = calloc(nframes, sizeof(float));
     alpha_msd = calloc(nframes, sizeof(alpha_msd[0]));
     phi_msd = calloc(nframes, sizeof(phi_msd[0]));
-    tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
-             n_tau, r_msd, alpha_msd, phi_msd);
+
+    r_msd_tot = calloc(nframes, sizeof(float));
+    r_msd_tot[0] = 0.0;
+
+    for (i_mol = 0; i_mol < 3; i_mol++) {
+      i_frame = 0;
+      for (j = 0; j < nframes; j++) {
+        r_msd[j] = 0.0;
+        r_msd_tot[j] = 0.0;
+      }
+      do {
+        if (i_frame == 1)
+          delta_t = time;
+        if (options.max_frames > 0 && i_frame >= options.max_frames) {
+          printf("\nMaximum number of frames reached.\n");
+          break;
+        }
+        if (i_frame % options.stride == 0) {
+          printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
+          fflush(stdout);
+          if (i_frame == 0) {
+            memcpy(curr, x, natoms*sizeof(x[0]));
+            for (i = 0; i < DIM; i++) {
+              r_msd_tau[i_frame][i] = 0.0;
+              alpha_msd_tau[i_frame][i] = 0.0;
+              phi_msd_tau[i_frame][i] = 0.0;
+            }
+          }
+          else if (i_frame > 0) {
+            memcpy(prev, curr, natoms*sizeof(x[0]));
+            memcpy(curr, x, natoms*sizeof(x[0]));
+            get_msd(i_mol, curr, prev, box[0][0], options.delta_z,
+                    delta_r, delta_alpha, delta_phi);
+            rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
+            rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
+            rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
+          }
+        }
+        i_frame++;
+      } while(!read_xtc(xd, natoms, &step, &time, box, x, &prec));
+
+      printf("\nTau averaging...\n");
+      fflush(stdout);
+      tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
+               n_tau, r_msd, alpha_msd, phi_msd);
+      printf("%f\n", r_msd[50]);
+      for (j = 0; j < nframes; j++) {
+        r_msd_tot[j] += r_msd[j] / (3);
+      }
+      printf("%f\n", r_msd_tot[50]);
+    }
+
+    free(x);
+    free(curr);
+    free(prev);
     free(r_msd_tau);
     free(alpha_msd_tau);
     free(phi_msd_tau);
@@ -208,26 +215,15 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
     fp = fopen("msd_out.txt", "w");
     for (i = 0; i < nframes; i++) {
-      fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
-              i * delta_t, r_msd[i] / n_tau[i], alpha_msd[0][i] / n_tau[i],
-              alpha_msd[1][i] / n_tau[i], alpha_msd[2][i] / n_tau[i],
-              phi_msd[0][i] / n_tau[i], phi_msd[1][i] / n_tau[i],
-              phi_msd[2][i] / n_tau[i]);
+      fprintf(fp, "%3.3g %3.8g\n",
+              i * delta_t, r_msd_tot[i] / n_tau[i]);
     }
     fclose(fp);
     free(n_tau);
     free(r_msd);
     free(alpha_msd);
     free(phi_msd);
-
-    // rvec a = { 1, 2, 3 };
-    // rvec b = { 4, 5, 6 };
-    // rvec c = { 0, 0, 0 };
-    //
-    // rxppyz(a, b, c);
-    // print_rvec(c, "\nc");
-    // rxppyz(a, b, c);
-    // print_rvec(c, "c");
+    free(r_msd_tot);
 
     return EXIT_SUCCESS;
 }
