@@ -14,7 +14,6 @@
 #include "xtc_seek.h"
 #include "tools.h"
 #include "analyze.h"
-#include "cblas.h"
 
 extern int errno;
 extern char *optarg;
@@ -23,7 +22,7 @@ extern int opterr, optind;
 
 int main(int argc, char *argv[]) {
     int opt;
-    options_t options = { 0.0, 0, "\0" , 1 };
+    options_t options = { 0.0, 0, "\0" , 1, 0, "msd_out.txt" };
 
     int natoms, nmol;
     int mol;
@@ -46,9 +45,9 @@ int main(int argc, char *argv[]) {
     rvec *curr;
     rvec *prev;
 
-    rvec delta_r = { 0, 0, 0 };
-    rvec delta_alpha = { 0, 0, 0 };
-    rvec delta_phi = { 0, 0, 0 };
+    rvec delta_r;
+    rvec delta_alpha;
+    rvec delta_phi;
 
     rvec *r_msd_tau;
     rvec *alpha_msd_tau;
@@ -61,9 +60,9 @@ int main(int argc, char *argv[]) {
 
     FILE *fp;
 
-    int i, i_mol, j;
+    float l, l_prev;
 
-    float *r_msd_tot;
+    int i, i_mol;
 
     opterr = 0;
 
@@ -84,6 +83,13 @@ int main(int argc, char *argv[]) {
 
            case 's':
               options.stride = atoi(optarg);
+              break;
+
+           case 'i':
+              options.i_mol = atoi(optarg);
+              break;
+           case 'o':
+              strcpy(options.oname, optarg);
               break;
 
            case 'h':
@@ -145,85 +151,78 @@ int main(int argc, char *argv[]) {
 
     nframes = (options.max_frames < n_frames) ? options.max_frames : n_frames;
     r_msd_tau = calloc(nframes, sizeof(r_msd_tau[0]));
-    alpha_msd_tau = calloc(nframes, sizeof(alpha_msd_tau[0]));
-    phi_msd_tau = calloc(nframes, sizeof(phi_msd_tau[0]));
-
-    n_tau = calloc(nframes, sizeof(long int));
-    r_msd = calloc(nframes, sizeof(float));
-    alpha_msd = calloc(nframes, sizeof(alpha_msd[0]));
-    phi_msd = calloc(nframes, sizeof(phi_msd[0]));
-
-    r_msd_tot = calloc(nframes, sizeof(float));
-    r_msd_tot[0] = 0.0;
-
-    for (i_mol = 0; i_mol < 3; i_mol++) {
-      i_frame = 0;
-      for (j = 0; j < nframes; j++) {
-        r_msd[j] = 0.0;
-        r_msd_tot[j] = 0.0;
-      }
-      do {
-        if (i_frame == 1)
-          delta_t = time;
-        if (options.max_frames > 0 && i_frame >= options.max_frames) {
-          printf("\nMaximum number of frames reached.\n");
-          break;
-        }
-        if (i_frame % options.stride == 0) {
-          printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
-          fflush(stdout);
-          if (i_frame == 0) {
-            memcpy(curr, x, natoms*sizeof(x[0]));
-            for (i = 0; i < DIM; i++) {
-              r_msd_tau[i_frame][i] = 0.0;
-              alpha_msd_tau[i_frame][i] = 0.0;
-              phi_msd_tau[i_frame][i] = 0.0;
-            }
-          }
-          else if (i_frame > 0) {
-            memcpy(prev, curr, natoms*sizeof(x[0]));
-            memcpy(curr, x, natoms*sizeof(x[0]));
-            get_msd(i_mol, curr, prev, box[0][0], options.delta_z,
-                    delta_r, delta_alpha, delta_phi);
-            rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
-            rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
-            rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
-          }
-        }
-        i_frame++;
-      } while(!read_xtc(xd, natoms, &step, &time, box, x, &prec));
-
-      printf("\nTau averaging...\n");
-      fflush(stdout);
-      tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
-               n_tau, r_msd, alpha_msd, phi_msd);
-      printf("%f\n", r_msd[50]);
-      for (j = 0; j < nframes; j++) {
-        r_msd_tot[j] += r_msd[j] / (3);
-      }
-      printf("%f\n", r_msd_tot[50]);
+    for (i = 0; i < DIM; i++) {
+      r_msd_tau[0][i] = 0;
     }
+    alpha_msd_tau = calloc(nframes, sizeof(alpha_msd_tau[0]));
+    for (i = 0; i < DIM; i++) {
+      alpha_msd_tau[0][i] = 0;
+    }
+    phi_msd_tau = calloc(nframes, sizeof(phi_msd_tau[0]));
+    for (i = 0; i < DIM; i++) {
+      phi_msd_tau[0][i] = 0;
+    }
+
+    do {
+      if (i_frame == 1)
+        delta_t = time;
+      if (options.max_frames > 0 && i_frame >= options.max_frames) {
+        printf("\nMaximum number of frames reached.\n");
+        break;
+      }
+      if (i_frame % options.stride == 0) {
+        printf("\rReading frame %d of %d, t = %.2f ps ", i_frame+1, n_frames, time);
+        fflush(stdout);
+        if (i_frame == 0) {
+          memcpy(curr, x, natoms*sizeof(x[0]));
+          l = box[0][0];
+        }
+        else if (i_frame > 0) {
+          i_mol = options.i_mol;
+          memcpy(prev, curr, natoms*sizeof(x[0]));
+          memcpy(curr, x, natoms*sizeof(x[0]));
+          l_prev = l;
+          l = box[0][0];
+          get_msd(i_mol, curr, prev, l, l_prev, options.delta_z,
+                  delta_r, delta_alpha, delta_phi);
+          rxpyz(r_msd_tau[i_frame-1], delta_r, r_msd_tau[i_frame]);
+          rxpyz(alpha_msd_tau[i_frame-1], delta_alpha, alpha_msd_tau[i_frame]);
+          rxpyz(phi_msd_tau[i_frame-1], delta_phi, phi_msd_tau[i_frame]);
+        }
+      }
+      i_frame++;
+    } while(!read_xtc(xd, natoms, &step, &time, box, x, &prec));
 
     free(x);
     free(curr);
     free(prev);
+
+    printf("\nTau averaging...\n");
+    fflush(stdout);
+    n_tau = calloc(nframes, sizeof(long int));
+    r_msd = calloc(nframes, sizeof(float));
+    alpha_msd = calloc(nframes, sizeof(alpha_msd[0]));
+    phi_msd = calloc(nframes, sizeof(phi_msd[0]));
+    tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
+             n_tau, r_msd, alpha_msd, phi_msd);
     free(r_msd_tau);
     free(alpha_msd_tau);
     free(phi_msd_tau);
 
-    printf("Writing to file...\n");
+    printf("Writing to file %s ...\n", options.oname);
     fflush(stdout);
-    fp = fopen("msd_out.txt", "w");
+    fp = fopen(options.oname, "w");
     for (i = 0; i < nframes; i++) {
-      fprintf(fp, "%3.3g %3.8g\n",
-              i * delta_t, r_msd_tot[i] / n_tau[i]);
+      fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
+              i * delta_t, r_msd[i] / n_tau[i], alpha_msd[i][0] / n_tau[i],
+              alpha_msd[i][1] / n_tau[i], alpha_msd[i][2] / n_tau[i],
+              phi_msd[i][0] / n_tau[i], phi_msd[i][1] / n_tau[i],
+              phi_msd[i][2] / n_tau[i]);
     }
-    fclose(fp);
     free(n_tau);
     free(r_msd);
     free(alpha_msd);
     free(phi_msd);
-    free(r_msd_tot);
 
     return EXIT_SUCCESS;
 }

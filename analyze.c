@@ -31,7 +31,7 @@ void tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
 }
 
 void get_msd(const int mol, const rvec *curr, const rvec *prev,
-             const float l, const float delta_z,
+             const float l, const float l_prev, const float delta_z,
              rvec delta_r, rvec delta_alpha, rvec delta_phi) {
   rvec x, y, z;
   rvec x_prev, y_prev, z_prev;
@@ -39,7 +39,7 @@ void get_msd(const int mol, const rvec *curr, const rvec *prev,
 
   i_mol = mol * DIM;
   get_eckart(curr[i_mol], curr[i_mol + 1], curr[i_mol + 2], l, x, y, z);
-  get_eckart(prev[i_mol], prev[i_mol + 1], prev[i_mol + 2], l,
+  get_eckart(prev[i_mol], prev[i_mol + 1], prev[i_mol + 2], l_prev,
              x_prev, y_prev, z_prev);
   get_delta(curr[i_mol], prev[i_mol], delta_z, x, y, z, x_prev, y_prev, z_prev, l,
             delta_r, delta_alpha, delta_phi);
