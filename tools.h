@@ -8,7 +8,7 @@
 
 typedef struct {
   float         delta_z;
-  uint64_t      max_frames;
+  long long     max_frames;
   char          fname[300];
   int           stride;
   int           i_mol;
