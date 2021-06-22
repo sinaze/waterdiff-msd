@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
     free(curr);
     free(prev);
 
-    printf("\nTau averaging...\n");
+    printf("\nTau averaging ...\n");
     fflush(stdout);
     n_tau = calloc(nframes, sizeof(long int));
     r_msd = calloc(nframes, sizeof(float));
@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
     free(alpha_msd_tau);
     free(phi_msd_tau);
 
-    printf("Writing to file %s ...\n", options.oname);
+    printf("Writing to file %s ...\t", options.oname);
     fflush(stdout);
     fp = fopen(options.oname, "w");
     for (i = 0; i < nframes; i++) {
@@ -219,10 +219,14 @@ int main(int argc, char *argv[]) {
               phi_msd[i][0] / n_tau[i], phi_msd[i][1] / n_tau[i],
               phi_msd[i][2] / n_tau[i]);
     }
+    fclose(fp);
     free(n_tau);
     free(r_msd);
     free(alpha_msd);
     free(phi_msd);
+
+    printf("done\n");
+    fflush(stdout);
 
     return EXIT_SUCCESS;
 }
