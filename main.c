@@ -233,10 +233,10 @@ int main(int argc, char *argv[]) {
       }
       printf("4\n");
       fclose(fp);
-      free(n_tau);
-      free(r_msd);
-      free(alpha_msd);
-      free(phi_msd);
+      // free(n_tau);
+      // free(r_msd);
+      // free(alpha_msd);
+      // free(phi_msd);
     }
     else {
       printf("\nLinear-spaced lag-time averaging\n");
