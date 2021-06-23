@@ -223,11 +223,13 @@ int main(int argc, char *argv[]) {
       fp = fopen(options.oname, "w");
       printf("3\n");
       for (i = 0; i < ntau; i++) {
-        fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
-                ilogspace(i, options.a) * delta_t, r_msd[i] / n_tau[i],
-                alpha_msd[i][0] / n_tau[i], alpha_msd[i][1] / n_tau[i],
-                alpha_msd[i][2] / n_tau[i], phi_msd[i][0] / n_tau[i],
-                phi_msd[i][1] / n_tau[i], phi_msd[i][2] / n_tau[i]);
+        if (n_tau[i] != 0) {
+          fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
+                  ilogspace(i, options.a) * delta_t, r_msd[i] / n_tau[i],
+                  alpha_msd[i][0] / n_tau[i], alpha_msd[i][1] / n_tau[i],
+                  alpha_msd[i][2] / n_tau[i], phi_msd[i][0] / n_tau[i],
+                  phi_msd[i][1] / n_tau[i], phi_msd[i][2] / n_tau[i]);
+        }
       }
       printf("4\n");
       fclose(fp);
