@@ -38,8 +38,10 @@ void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
   rvec delta_msd;
 
   ntau = logspace(nframes, a);
+  printf("11\n");
   for (tau = 0; tau < ntau; tau++) {
     t = ilogspace(tau, a);
+    printf("12\n");
     if (t > t_prev) {
       n_tau[tau] += nframes - t;
       for (i = 0; i < nframes - t; i++) {
@@ -54,6 +56,7 @@ void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
           phi_msd[tau][j] += pow(delta_msd[j], 2);
         }
       }
+    printf("13\n");
     t_prev = t;
     }
   }
