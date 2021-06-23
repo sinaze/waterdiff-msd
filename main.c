@@ -205,7 +205,11 @@ int main(int argc, char *argv[]) {
     if (options.a > 0) {
       printf("\nLog-spaced lag-time averaging with a = %f\n", options.a);
       fflush(stdout);
+<<<<<<< HEAD
       ntau = logspace(nframes, options.a);
+=======
+      ntau = logspace(nframes, a);
+>>>>>>> d6a32b1039975ac978868f86b1122de49048e9f1
       n_tau = calloc(ntau, sizeof(long int));
       r_msd = calloc(ntau, sizeof(float));
       alpha_msd = calloc(ntau, sizeof(alpha_msd[0]));
@@ -221,7 +225,11 @@ int main(int argc, char *argv[]) {
       fp = fopen(options.oname, "w");
       for (i = 0; i < ntau; i++) {
         fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
+<<<<<<< HEAD
                 ilogspace(i, options.a) * delta_t, r_msd[i] / n_tau[i],
+=======
+                ilogspace(i) * delta_t, r_msd[i] / n_tau[i],
+>>>>>>> d6a32b1039975ac978868f86b1122de49048e9f1
                 alpha_msd[i][0] / n_tau[i], alpha_msd[i][1] / n_tau[i],
                 alpha_msd[i][2] / n_tau[i], phi_msd[i][0] / n_tau[i],
                 phi_msd[i][1] / n_tau[i], phi_msd[i][2] / n_tau[i]);
