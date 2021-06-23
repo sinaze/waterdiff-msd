@@ -31,3 +31,12 @@ void tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
               const rvec *phi_msd_tau, const int nframes,
               long int *n_tau, float *r_msd, rvec *alpha_msd,
               rvec *phi_msd);
+
+int logspace(const int x, const float a);
+
+int ilogspace(const int x, const float a);
+
+void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
+                  const rvec *phi_msd_tau, const int nframes,
+                  const float a, long int *n_tau,
+                  float *r_msd, rvec *alpha_msd, rvec *phi_msd);

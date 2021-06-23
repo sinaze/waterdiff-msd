@@ -22,7 +22,7 @@ extern int opterr, optind;
 
 int main(int argc, char *argv[]) {
     int opt;
-    options_t options = { 0.0, 0, "\0" , 1, 0, "msd_out.txt" };
+    options_t options = { 0.0, 0, "\0" , 1, 0, 0, "msd_out.txt" };
 
     int natoms, nmol;
     int mol;
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
     float l, l_prev;
 
-    int i, i_mol;
+    int i, i_mol, ntau;
 
     opterr = 0;
 
@@ -88,6 +88,11 @@ int main(int argc, char *argv[]) {
            case 'i':
               options.i_mol = atoi(optarg);
               break;
+
+           case 'l':
+              options.a = strtof(optarg, NULL);
+              break;
+
            case 'o':
               strcpy(options.oname, optarg);
               break;
@@ -197,33 +202,65 @@ int main(int argc, char *argv[]) {
     free(curr);
     free(prev);
 
-    printf("\nTau averaging ...\n");
-    fflush(stdout);
-    n_tau = calloc(nframes, sizeof(long int));
-    r_msd = calloc(nframes, sizeof(float));
-    alpha_msd = calloc(nframes, sizeof(alpha_msd[0]));
-    phi_msd = calloc(nframes, sizeof(phi_msd[0]));
-    tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
-             n_tau, r_msd, alpha_msd, phi_msd);
-    free(r_msd_tau);
-    free(alpha_msd_tau);
-    free(phi_msd_tau);
+    if (options.a > 0) {
+      printf("\nLog-spaced lag-time averaging with a = %f\n", options.a);
+      fflush(stdout);
+      ntau = logspace(nframes, a);
+      n_tau = calloc(ntau, sizeof(long int));
+      r_msd = calloc(ntau, sizeof(float));
+      alpha_msd = calloc(ntau, sizeof(alpha_msd[0]));
+      phi_msd = calloc(ntau, sizeof(phi_msd[0]));
+      log_tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
+                   options.a, n_tau, r_msd, alpha_msd, phi_msd);
+      free(r_msd_tau);
+      free(alpha_msd_tau);
+      free(phi_msd_tau);
 
-    printf("Writing to file %s ...\t", options.oname);
-    fflush(stdout);
-    fp = fopen(options.oname, "w");
-    for (i = 0; i < nframes; i++) {
-      fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
-              i * delta_t, r_msd[i] / n_tau[i], alpha_msd[i][0] / n_tau[i],
-              alpha_msd[i][1] / n_tau[i], alpha_msd[i][2] / n_tau[i],
-              phi_msd[i][0] / n_tau[i], phi_msd[i][1] / n_tau[i],
-              phi_msd[i][2] / n_tau[i]);
+      printf("Writing to file %s\t", options.oname);
+      fflush(stdout);
+      fp = fopen(options.oname, "w");
+      for (i = 0; i < ntau; i++) {
+        fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
+                ilogspace(i) * delta_t, r_msd[i] / n_tau[i],
+                alpha_msd[i][0] / n_tau[i], alpha_msd[i][1] / n_tau[i],
+                alpha_msd[i][2] / n_tau[i], phi_msd[i][0] / n_tau[i],
+                phi_msd[i][1] / n_tau[i], phi_msd[i][2] / n_tau[i]);
+      }
+      fclose(fp);
+      free(n_tau);
+      free(r_msd);
+      free(alpha_msd);
+      free(phi_msd);
     }
-    fclose(fp);
-    free(n_tau);
-    free(r_msd);
-    free(alpha_msd);
-    free(phi_msd);
+    else {
+      printf("\nLinear-spaced lag-time averaging\n");
+      fflush(stdout);
+      n_tau = calloc(nframes, sizeof(long int));
+      r_msd = calloc(nframes, sizeof(float));
+      alpha_msd = calloc(nframes, sizeof(alpha_msd[0]));
+      phi_msd = calloc(nframes, sizeof(phi_msd[0]));
+      tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
+               n_tau, r_msd, alpha_msd, phi_msd);
+      free(r_msd_tau);
+      free(alpha_msd_tau);
+      free(phi_msd_tau);
+
+      printf("Writing to file %s ...\t", options.oname);
+      fflush(stdout);
+      fp = fopen(options.oname, "w");
+      for (i = 0; i < nframes; i++) {
+        fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
+                i * delta_t, r_msd[i] / n_tau[i], alpha_msd[i][0] / n_tau[i],
+                alpha_msd[i][1] / n_tau[i], alpha_msd[i][2] / n_tau[i],
+                phi_msd[i][0] / n_tau[i], phi_msd[i][1] / n_tau[i],
+                phi_msd[i][2] / n_tau[i]);
+      }
+      fclose(fp);
+      free(n_tau);
+      free(r_msd);
+      free(alpha_msd);
+      free(phi_msd);
+    }
 
     printf("done\n");
     fflush(stdout);

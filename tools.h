@@ -1,5 +1,5 @@
-#define OPTSTR "f:z:n:s:i:o:h"
-#define USAGE_FMT  "%s -f trajectory [-z delta_z] [-n number of frames] [-s stride] [-i molecule no.] [-o output] [-h]\n"
+#define OPTSTR "f:z:n:s:i:l:o:h"
+#define USAGE_FMT  "%s -f trajectory [-z delta_z] [-n number of frames] [-s stride] [-i molecule no.] [-l log-spacing parameter] [-o output] [-h]\n"
 #define ERR_FOPEN_INPUT  "fopen(input, r)"
 #define ERR_FOPEN_OUTPUT "fopen(output, w)"
 #define ERR_NOFNAME "-f is mandatory!\n"
@@ -12,6 +12,7 @@ typedef struct {
   char          fname[300];
   int           stride;
   int           i_mol;
+  float         a;
   char          oname[300];
 } options_t;
 

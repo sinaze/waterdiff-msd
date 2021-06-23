@@ -30,6 +30,43 @@ void tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
   }
 }
 
+void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
+                  const rvec *phi_msd_tau, const int nframes,
+                  const float a, long int *n_tau,
+                  float *r_msd, rvec *alpha_msd, rvec *phi_msd) {
+  int tau, i, j, ntau, t, t_prev;
+  rvec delta_msd;
+
+  ntau = logspace(nframes, a);
+  for (tau = 0; tau < ntau; tau++) {
+    t = ilogspace(t, a);
+    if (t > t_prev) {
+      n_tau[tau] += nframes - t;
+      for (i = 0; i < nframes - t; i++) {
+        rxmyz(r_msd_tau[i+t], r_msd_tau[i], delta_msd);
+        r_msd[t] += cblas_sdot(DIM, delta_msd, INC, delta_msd, INC);
+        rxmyz(alpha_msd_tau[i+t], alpha_msd_tau[i], delta_msd);
+        for (j = 0; j < DIM; j++) {
+          alpha_msd[tau][j] += pow(delta_msd[j], 2);
+        }
+        rxmyz(phi_msd_tau[i+t], phi_msd_tau[i], delta_msd);
+        for (j = 0; j < DIM; j++) {
+          phi_msd[tau][j] += pow(delta_msd[j], 2);
+        }
+      }
+    t_prev = t;
+    }
+  }
+}
+
+int logspace(const int x, const float a) {
+  return (int) ceil(log10(x) / a);
+}
+
+int ilogspace(const int x, const float a) {
+  return (int) floor(pow(10, a * x));
+}
+
 void get_msd(const int mol, const rvec *curr, const rvec *prev,
              const float l, const float l_prev, const float delta_z,
              rvec delta_r, rvec delta_alpha, rvec delta_phi) {
