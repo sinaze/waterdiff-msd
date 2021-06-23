@@ -39,7 +39,7 @@ void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
 
   ntau = logspace(nframes, a);
   for (tau = 0; tau < ntau; tau++) {
-    t = ilogspace(t, a);
+    t = ilogspace(tau, a);
     if (t > t_prev) {
       n_tau[tau] += nframes - t;
       for (i = 0; i < nframes - t; i++) {
