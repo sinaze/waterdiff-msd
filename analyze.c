@@ -43,8 +43,10 @@ void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
     t = ilogspace(tau, a);
     printf("12\n");
     if (t > t_prev) {
+      printf("t = %d\n", t);
       n_tau[tau] += nframes - t;
       for (i = 0; i < nframes - t; i++) {
+        printf("i = %d\n", i);
         rxmyz(r_msd_tau[i+t], r_msd_tau[i], delta_msd);
         r_msd[t] += cblas_sdot(DIM, delta_msd, INC, delta_msd, INC);
         rxmyz(alpha_msd_tau[i+t], alpha_msd_tau[i], delta_msd);
