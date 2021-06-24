@@ -44,6 +44,7 @@ void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
     printf("12\n");
     if (t > t_prev) {
       printf("t = %d\n", t);
+      printf("tau = %d\n", tau);
       n_tau[tau] += nframes - t;
       for (i = 0; i < nframes - t; i++) {
         printf("i = %d\n", i);
