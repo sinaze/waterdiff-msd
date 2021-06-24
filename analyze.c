@@ -158,7 +158,7 @@ void get_delta(const rvec ow, const rvec ow_prev, const float delta_z,
 
   for (i = 0; i < DIM; i++) {
     delta_r[i] = pbc_corr(ow[i] + delta_z * z[i]
-                          - ow_prev[i] + delta_z * z_prev[i], l);
+                          - ow_prev[i] - delta_z * z_prev[i], l);
   }
   delta_alpha[0] = 0.5 * (cblas_sdot(DIM, delta_r, INC, x, INC)
                           + cblas_sdot(DIM, delta_r, INC, x_prev, INC));

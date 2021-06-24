@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
     options_t options = { 0.0, 0, "\0" , 1, 0, 0, "msd_out.txt" };
 
     int natoms, nmol;
-    int mol;
-    int molbatch = 53;
+    // int mol;
+    // int molbatch = 53;
 
     XDRFILE *xd;
     int step;
@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
     rvec *x;
 
     int n_frames;
-    int est_nframes;
-    int64_t **offsets;
+    // int est_nframes;
+    // int64_t **offsets;
 
     int nframes;
 
