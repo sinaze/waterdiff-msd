@@ -210,18 +210,15 @@ int main(int argc, char *argv[]) {
       r_msd = calloc(ntau, sizeof(float));
       alpha_msd = calloc(ntau, sizeof(alpha_msd[0]));
       phi_msd = calloc(ntau, sizeof(phi_msd[0]));
-      printf("1\n");
       log_tau_avrg(r_msd_tau, alpha_msd_tau, phi_msd_tau, nframes,
                    options.a, n_tau, r_msd, alpha_msd, phi_msd);
       free(r_msd_tau);
       free(alpha_msd_tau);
       free(phi_msd_tau);
-      printf("2\n");
 
       printf("Writing to file %s\t", options.oname);
       fflush(stdout);
       fp = fopen(options.oname, "w");
-      printf("3\n");
       for (i = 0; i < ntau; i++) {
         if (n_tau[i] != 0) {
           fprintf(fp, "%3.3g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g %3.8g\n",
@@ -231,12 +228,7 @@ int main(int argc, char *argv[]) {
                   phi_msd[i][1] / n_tau[i], phi_msd[i][2] / n_tau[i]);
         }
       }
-      printf("4\n");
       fclose(fp);
-      // free(n_tau);
-      // free(r_msd);
-      // free(alpha_msd);
-      // free(phi_msd);
     }
     else {
       printf("\nLinear-spaced lag-time averaging\n");
@@ -251,7 +243,7 @@ int main(int argc, char *argv[]) {
       free(alpha_msd_tau);
       free(phi_msd_tau);
 
-      printf("Writing to file %s ...\t", options.oname);
+      printf("\nWriting to file %s ...\t", options.oname);
       fflush(stdout);
       fp = fopen(options.oname, "w");
       for (i = 0; i < nframes; i++) {
@@ -262,12 +254,12 @@ int main(int argc, char *argv[]) {
                 phi_msd[i][2] / n_tau[i]);
       }
       fclose(fp);
-      free(n_tau);
-      free(r_msd);
-      free(alpha_msd);
-      free(phi_msd);
     }
 
+    free(n_tau);
+    free(r_msd);
+    free(alpha_msd);
+    free(phi_msd);
     printf("done\n");
     fflush(stdout);
 
