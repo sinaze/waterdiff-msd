@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
       free(alpha_msd_tau);
       free(phi_msd_tau);
 
-      printf("Writing to file %s\t", options.oname);
+      printf("\nWriting to file %s\n", options.oname);
       fflush(stdout);
       fp = fopen(options.oname, "w");
       for (i = 0; i < ntau; i++) {
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
       free(alpha_msd_tau);
       free(phi_msd_tau);
 
-      printf("\nWriting to file %s ...\t", options.oname);
+      printf("Writing to file %s\n", options.oname);
       fflush(stdout);
       fp = fopen(options.oname, "w");
       for (i = 0; i < nframes; i++) {
@@ -260,8 +260,6 @@ int main(int argc, char *argv[]) {
     free(r_msd);
     free(alpha_msd);
     free(phi_msd);
-    printf("done\n");
-    fflush(stdout);
 
     return EXIT_SUCCESS;
 }
