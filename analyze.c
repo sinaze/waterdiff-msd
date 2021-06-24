@@ -39,7 +39,7 @@ void log_tau_avrg(const rvec *r_msd_tau, const rvec *alpha_msd_tau,
 
   ntau = logspace(nframes, a);
   for (tau = 0; tau < ntau; tau++) {
-    printf("\rtau = %d / %d", tau, ntau);
+    printf("\rtau = %d of total %d", tau, ntau-1);
     fflush(stdout);
     t = ilogspace(tau, a);
     if (t > t_prev) {
