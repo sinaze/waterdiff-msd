@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "xdrfile/xdrfile_xtc.h"
+#include "xdrfile_xtc.h"
 
 #define rPI 3.1416
 
@@ -219,7 +219,7 @@ void free_mem(void) {
 void analyze_MSDs(int mol_ind) {
   int i, j, O_ind, T, dt, lastdt=-1;
   double dtmp;
-  double OH1[3], OH2[3], X_h2o[3], Y_h2o[3], Z_h2o[3], delta_R[3];
+  double OH1[3], OH2[3], X_h2o[3], Y_h2o[3], Z_h2o[3], delta_R[3], delta_R_cent[3];
   double X_h2o_last[3], Y_h2o_last[3], Z_h2o_last[3];
 
   // initialize
@@ -275,12 +275,13 @@ void analyze_MSDs(int mol_ind) {
       for (j = 0; j < 3; j++) {
         // correct PBC
         delta_R[j] = (double) fmod(DATA[3*O_ind + j] + delta_z * Z_h2o[j] - DATA[3 * (O_ind - 3*nb_mols_fr) + j] - delta_z * Z_h2o_last[j] + 1.5*L, L) - 0.5*L;
+        delta_R_cent[j] = (double) fmod(DATA[3 * (O_ind + 3*nb_mols_fr) + j] + delta_z * Z_h2o[j] - DATA[3 * (O_ind - 3*nb_mols_fr) + j] - delta_z * Z_h2o_last[j] + 1.5*L, L) - 0.5*L;
         traj[3*i + j] = traj[3 * (i - 1) + j] + delta_R[j];
       }
       // Eckart frame tranlations Delta alpha
-      traj_loc[3*i] = traj_loc[3 * (i - 1)] + 0.5 * (vect_scalar_prod(delta_R, X_h2o_last) + vect_scalar_prod(delta_R, X_h2o));
-      traj_loc[3*i + 1] = traj_loc[3 * (i - 1) + 1] + 0.5 * (vect_scalar_prod(delta_R, Y_h2o_last) + vect_scalar_prod(delta_R, Y_h2o));
-      traj_loc[3*i + 2] = traj_loc[3 * (i - 1) + 2] + 0.5 * (vect_scalar_prod(delta_R, Z_h2o_last) + vect_scalar_prod(delta_R, Z_h2o));
+      traj_loc[3*i] = traj_loc[3 * (i - 1)] + 0.5 * vect_scalar_prod(delta_R_cent, X_h2o);
+      traj_loc[3*i + 1] = traj_loc[3 * (i - 1) + 1] + 0.5 * vect_scalar_prod(delta_R_cent, Y_h2o);
+      traj_loc[3*i + 2] = traj_loc[3 * (i - 1) + 2] + 0.5 * vect_scalar_prod(delta_R_cent, Z_h2o);
       // Eckart frame rotations Delta phi
       traj_th[3*i] = traj_th[3 * (i - 1)] + 0.5 * (vect_scalar_prod(Y_h2o, Z_h2o_last) - vect_scalar_prod(Z_h2o, Y_h2o_last));
       traj_th[3*i + 1] = traj_th[3 * (i - 1) + 1] + 0.5 * (vect_scalar_prod(Z_h2o, X_h2o_last) - vect_scalar_prod(X_h2o, Z_h2o_last));
