@@ -275,7 +275,7 @@ void analyze_MSDs(int mol_ind) {
       for (j = 0; j < 3; j++) {
         // correct PBC
         delta_R[j] = (double) fmod(DATA[3*O_ind + j] + delta_z * Z_h2o[j] - DATA[3 * (O_ind - 3*nb_mols_fr) + j] - delta_z * Z_h2o_last[j] + 1.5*L, L) - 0.5*L;
-        delta_R_cent[j] = (double) fmod(DATA[3 * (O_ind + 3*nb_mols_fr) + j] + delta_z * Z_h2o[j] - DATA[3 * (O_ind - 3*nb_mols_fr) + j] - delta_z * Z_h2o_last[j] + 1.5*L, L) - 0.5*L;
+        delta_R_cent[j] = (double) fmod(DATA[3 * (O_ind + 3*nb_mols_fr) + j] + delta_z * Z_h2o[j] - DATA[3 * (O_ind - 3*nb_mols_fr) + j] - delta_z * Z_h2o[j] + 1.5*L, L) - 0.5*L;
         traj[3*i + j] = traj[3 * (i - 1) + j] + delta_R[j];
       }
       // Eckart frame tranlations Delta alpha
